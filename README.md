@@ -38,3 +38,7 @@ MCPs allow you to create **standardized endpoints** that AI models or tools can 
 
 Each of the databases in this repo have their own README.md file with detailed instructions on how to run the MCP on your machine!
 Simply navigate to the folder and follow the steps to install dependencies and start the server.
+Make sure you have the FastMCP Python library:
+```bash
+pip install fastmcp
+```
