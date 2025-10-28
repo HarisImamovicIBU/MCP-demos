@@ -31,4 +31,5 @@ Before running this MCP, make sure you have the following installed:
   }
   ```
 - **Enable MCP tools on your AI client**
-- **Query your database using your AI** 
+- **Query your database using your AI:**
+<img width="977" height="774" alt="a" src="https://github.com/user-attachments/assets/61059d70-8637-45c8-9270-3ecc1d722787" />
