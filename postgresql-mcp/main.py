@@ -13,9 +13,9 @@ from fastmcp import FastMCP
 DB_CONFIG = {
     "host": os.getenv("DB_HOST", "localhost"),
     "port": int(os.getenv("DB_PORT", 5432)),
-    "user": int(os.getenv("DB_USER", "YourUsername")),
-    "password": os.getenv("DB_PASSWORD", "YourPassword"),
-    "database": os.getenv("DB_NAME", "classicmodels")
+    "user": os.getenv("DB_USER", "postgres"),
+    "password": os.getenv("DB_PASSWORD", "11235813"),
+    "database": os.getenv("DB_NAME", "ClassicModels")
 }
 
 # Safety variables
@@ -113,3 +113,71 @@ def sanitize_identifier(identifier: str) -> str:
     if not re.match(r'^[a-zA-Z0-9_\.]+$', identifier):
         raise ValueError(f"Invalid identifier: {identifier}")
     return identifier
+
+# AI-executables
+@mcp.tool()
+def execute_select_query(query: str) -> List[Dict[str, Any]]:
+    """
+    Execute a custom SQL SELECT query with security validation.
+    
+    Args:
+        query: SQL SELECT query to execute
+        
+    Security:
+        - Only SELECT, SHOW, EXPLAIN, WITH queries allowed
+        - Dangerous operations blocked
+        - Query timeout protection
+        - Row limit enforcement
+    """
+    start_time = time.time()
+    
+    try:
+        is_valid, error_msg = validate_query_safety(query)
+        if not is_valid:
+            raise ValueError(f"Security validation failed: {error_msg}")
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute(f"SET statement_timeout = {MAX_QUERY_TIME * 1000}")
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            
+            if len(rows) > MAX_ROWS:
+                raise ValueError(f"Query returned {len(rows)} rows, exceeding limit of {MAX_ROWS}")
+            
+            duration = time.time() - start_time
+            log_info(f"Query executed in {duration:.3f}s, returned {len(rows)} rows")
+            
+            return [dict(row) for row in rows]
+    except Exception as e:
+        log_error(f"Query execution error: {e}")
+        raise
+
+@mcp.tool()
+def count_rows(table_name: str, schema_name: str = "classicmodels") -> Dict[str, Any]:
+    """
+    Return the total number of rows in a table.
+    
+    Args:
+        table_name: Name of the table
+        schema_name: Schema name (default: classicmodels)
+    """
+    try:
+        table_name = sanitize_identifier(table_name)
+        schema_name = sanitize_identifier(schema_name)
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute(f'SELECT COUNT(*) as count FROM "{schema_name}"."{table_name}"')
+            result = cursor.fetchone()
+            return {
+                "table": f"{schema_name}.{table_name}",
+                "row_count": result["count"]
+            }
+    except Exception as e:
+        log_error(f"count_rows error: {e}")
+        raise
+
+if __name__ == "__main__":
+    init_pool()
+    mcp.run()
