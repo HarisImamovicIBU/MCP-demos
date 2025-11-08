@@ -13,8 +13,8 @@ from fastmcp import FastMCP
 DB_CONFIG = {
     "host": os.getenv("DB_HOST", "localhost"),
     "port": int(os.getenv("DB_PORT", 5432)),
-    "user": os.getenv("DB_USER", "postgres"),
-    "password": os.getenv("DB_PASSWORD", "11235813"),
+    "user": os.getenv("DB_USER", "YourUsername"),
+    "password": os.getenv("DB_PASSWORD", "YourPassword"),
     "database": os.getenv("DB_NAME", "ClassicModels")
 }
 
